@@ -1,0 +1,33 @@
+package com.bunnyphoon.server.command;
+
+import com.bunnyphoon.netcore.message.Message;
+import com.bunnyphoon.server.service.CommandService;
+import io.netty.channel.Channel;
+
+/**
+ * CommandID CHAT_ECHO = 100
+ * commandService.execute(message); 을 통해 실행되는 클래스입니다.
+ */
+
+public class Echo extends CommandService {
+
+    @Override
+    public boolean execute(Message message) {
+
+        String who = getUser(message);
+        short command = message.getCommand();
+        String text = message.getString();
+
+        Channel channel = message.getChannel();
+
+        Message response = Message.create();
+        response.init();
+        response.setCommand(command);
+        response.addString(who + " : " + text);
+
+        channel.writeAndFlush(response);
+
+        return true;
+    }
+
+}
