@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class SimpleNetty implements ServiceHandler {
+public class SimpleNettyRunner implements ServiceHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleNetty.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleNettyRunner.class);
 
     private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
@@ -38,7 +38,7 @@ public class SimpleNetty implements ServiceHandler {
      * InboundHandlerBindUtil 를 생성하고 NettyHandler 에 SimpleNetty (ServiceHandler 의 구현) 을 건네줍니다.<br>
      * InboundHandlerBindUtil 는 ChannelInboundHandlerAdapter 를 확장했고 서버부트스트랩의 채널 파이프라인에 inbound 처리자로 등록되어있기 때문에
      * InboundHandlerBindUtil 는 들어오는 모든 이벤트를 SimpleNetty (ServiceHandler 의 구현) 에게 건네주어 이 안에서 메시지에 대한 직접적인 처리를 하게 됩니다.<br>
-     * 이런식으로 요청에 대한 핸들러를 직접적으로 사용하지 않고 인터페이스를 둘러서 오게되면 발생한 이벤트, 수신된 메시지 마다 다른 유형의 ServiceHandler 를 구현하여
+     * 이런식으로 요청에 대한 핸들러를 직접적으로 사용하지 않고 인터페이스를 경유하여 오게되면 발생한 이벤트, 수신된 메시지 마다 다른 유형의 ServiceHandler 를 구현하여
      * 하나의 클래스에 모든 처리가 몰리게 되는 상황을 방지 할 수 있고 더욱 유연한 코드 작성이 가능하게 됩니다.
      * @param port
      */

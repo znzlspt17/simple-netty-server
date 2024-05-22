@@ -27,11 +27,6 @@ public class Message {
         buffer = null;
     }
 
-    /**
-     * 객체의 생성자를 직접 호출하는 것을 금지하고 팩토리 메소드 init()을 호출하여 Unpooled를 통해 버퍼에 풀링되지 않은 1KB(1024 byte)의 directBuffer 를 할당하고 readerIndex 를 4로 변경합니다.<br>
-     * readerIndex 를 4로 옮겨놓는 이유는 0,1 에는 short 형식의 커맨드와, 2,3 에는 메세지의 사이즈 정보가 담기게 됩니다.<br>
-     * 이것은 어떤 서비스 핸들러에 배정할지 시스템이 사용해야 될 영역이며 어떤 기능을 구현해야할지 작성해야될 개발자가 직접 핸들링 할 필요가 없기 때문입니다.
-     */
     public static Message create() {
         return new Message();
     }
@@ -42,6 +37,31 @@ public class Message {
             buffer.readerIndex(4);
         }
     }
+
+    public byte getByte() {
+        return buffer.readByte();
+    }
+
+    public Message addByte(byte value) {
+        buffer.writeByte(value);
+        return this;
+    }
+
+    public String getString() {
+        short size = buffer.readShortLE();
+        byte[] bytes = new byte[size + 1];
+        buffer.readBytes(bytes, 0, size);
+        return new String(bytes).trim();
+    }
+
+    public Message addString(String value) {
+        byte[] bytes = value.getBytes();
+        buffer.writeShortLE((short) bytes.length + 1);
+        buffer.writeBytes(bytes);
+        buffer.writeByte((byte) '\0');
+        return this;
+    }
+
 
     /**
      * 송신할 내용의 작성을 마쳤다면 사이즈를 명시적으로 저장합니다.
@@ -125,10 +145,6 @@ public class Message {
      * @param value
      * @return 해당 인스턴스
      */
-    public Message addByte(byte value) {
-        buffer.writeByte(value);
-        return this;
-    }
 
     public Message addBytes(byte[] value) {
         buffer.writeShortLE((short) value.length);
@@ -168,17 +184,7 @@ public class Message {
      * @param value
      * @return 해당 인스턴스
      */
-    public Message addString(String value) {
-        byte[] bytes = value.getBytes();
-        buffer.writeShortLE((short) bytes.length + 1);
-        buffer.writeBytes(bytes);
-        buffer.writeByte((byte) '\0');
-        return this;
-    }
 
-    public byte getByte() {
-        return buffer.readByte();
-    }
 
     /**
      * 바이트어레이를 직접 핸들하고 싶을 경우 사용됩니다.
@@ -221,12 +227,7 @@ public class Message {
      * ByteBuf에 byte[]로 저장된 문자열을 가져올 때 사용됩니다.
      * @return String
      */
-    public String getString() {
-        short size = buffer.readShortLE();
-        byte[] bytes = new byte[size + 1];
-        buffer.readBytes(bytes, 0, size);
-        return new String(bytes).trim();
-    }
+
 }
 
 
