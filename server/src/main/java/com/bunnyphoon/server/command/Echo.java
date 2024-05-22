@@ -1,7 +1,7 @@
 package com.bunnyphoon.server.command;
 
 import com.bunnyphoon.netcore.message.Message;
-import com.bunnyphoon.server.service.CommandService;
+import com.bunnyphoon.server.service.CommandServiceImpl;
 import io.netty.channel.Channel;
 
 /**
@@ -9,7 +9,7 @@ import io.netty.channel.Channel;
  * commandService.execute(message); 을 통해 실행되는 클래스입니다.
  */
 
-public class Echo extends CommandService {
+public class Echo extends CommandServiceImpl {
 
     @Override
     public boolean execute(Message message) {

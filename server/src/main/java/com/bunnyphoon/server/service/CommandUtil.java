@@ -23,14 +23,14 @@ public class CommandUtil {
      * @param command
      * @return
      */
-    public CommandService findFunction(short command) {
+    public CommandServiceImpl findFunction(short command) {
 
         String funcName = functions.get(command);
         Class<?> clazz;
-        CommandService commandService;
+        CommandServiceImpl commandServiceImpl;
         try {
             clazz = Class.forName(funcName);
-            commandService = (CommandService) clazz.getDeclaredConstructor().newInstance();
+            commandServiceImpl = (CommandServiceImpl) clazz.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException e1) {
             throw new RuntimeException(e1);
         } catch (InvocationTargetException e2) {
@@ -42,7 +42,7 @@ public class CommandUtil {
         } catch (NoSuchMethodException e5) {
             throw new RuntimeException(e5);
         }
-        return commandService;
+        return commandServiceImpl;
     }
 
     public Map<Short, String> getFunctions() {

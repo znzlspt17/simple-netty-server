@@ -5,7 +5,7 @@ import com.bunnyphoon.netcore.handler.ServiceHandler;
 import com.bunnyphoon.netcore.message.Message;
 import com.bunnyphoon.netcore.message.MessageCodec;
 import com.bunnyphoon.server.service.CommandIDs;
-import com.bunnyphoon.server.service.CommandService;
+import com.bunnyphoon.server.service.CommandServiceImpl;
 import com.bunnyphoon.server.service.CommandUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -29,7 +29,7 @@ public class SimpleNetty implements ServiceHandler {
 
     private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    CommandService commandService;
+    CommandServiceImpl commandServiceImpl;
     CommandUtil commandUtil;
 
     /**
@@ -118,9 +118,9 @@ public class SimpleNetty implements ServiceHandler {
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) {
         if (o instanceof Message message) {
             message.setChannel(channelHandlerContext.channel());
-            commandService = commandUtil.findFunction(message.getCommand());
-            commandService.setFunctions(commandUtil.getFunctions());
-            commandService.execute(message);
+            commandServiceImpl = commandUtil.findFunction(message.getCommand());
+            commandServiceImpl.setFunctions(commandUtil.getFunctions());
+            commandServiceImpl.execute(message);
         }
     }
 

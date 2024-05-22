@@ -7,7 +7,7 @@ import io.netty.channel.group.ChannelGroup;
 
 import java.util.Map;
 
-public abstract class CommandService extends Command {
+public abstract class CommandServiceImpl extends Command {
 
     protected ChannelGroup channelGroup;
     protected Map<Short, String> functions;
