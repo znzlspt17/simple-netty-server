@@ -4,4 +4,3 @@ Message.class와 MessageCodec을 구현하여 Bytebuffer를 쉽게 핸들링하�
 
 ## 목차 
 
--[소개](#소개)
