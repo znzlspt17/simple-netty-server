@@ -1,17 +1,17 @@
-package com.bunnyphoon.server.netty;
+package com.znzlspt.server.netty;
 
-import com.bunnyphoon.netcore.handler.InboundHandlerBindUtil;
-import com.bunnyphoon.netcore.handler.ServiceHandler;
-import com.bunnyphoon.netcore.message.Message;
-import com.bunnyphoon.netcore.message.MessageCodec;
-import com.bunnyphoon.server.service.CommandIDs;
-import com.bunnyphoon.server.service.CommandServiceImpl;
-import com.bunnyphoon.server.service.CommandUtil;
+import com.znzlspt.netcore.handler.InboundHandlerBindHelper;
+import com.znzlspt.netcore.handler.ServiceHandler;
+import com.znzlspt.netcore.message.Codec;
+import com.znzlspt.netcore.message.Message;
+import com.znzlspt.server.service.CommandIDs;
+import com.znzlspt.server.service.CommandServiceImpl;
+import com.znzlspt.server.service.CommandUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleState;
@@ -35,9 +35,9 @@ public class SimpleNettyRunner implements ServiceHandler {
     /**
      * Netty 서버사이드의 ServerBootstrap 의 간단한 구성입니다<br>
      * 연결만을 담당하는 bossGroup 과 I/O 및 연결해제를 담당하는 workerGroup 을 ServerBootstrap 에 등록합니다.<br>
-     * InboundHandlerBindUtil 를 생성하고 NettyHandler 에 SimpleNetty (ServiceHandler 의 구현) 을 건네줍니다.<br>
-     * InboundHandlerBindUtil 는 ChannelInboundHandlerAdapter 를 확장했고 서버부트스트랩의 채널 파이프라인에 inbound 처리자로 등록되어있기 때문에
-     * InboundHandlerBindUtil 는 들어오는 모든 이벤트를 SimpleNetty (ServiceHandler 의 구현) 에게 건네주어 이 안에서 메시지에 대한 직접적인 처리를 하게 됩니다.<br>
+     * InboundHandlerBindHelper 를 생성하고 NettyHandler 에 SimpleNetty (ServiceHandler 의 구현) 을 건네줍니다.<br>
+     * InboundHandlerBindHelper 는 ChannelInboundHandlerAdapter 를 확장했고 서버부트스트랩의 채널 파이프라인에 inbound 처리자로 등록되어있기 때문에
+     * InboundHandlerBindHelper 는 들어오는 모든 이벤트를 SimpleNetty (ServiceHandler 의 구현) 에게 건네주어 이 안에서 메시지에 대한 직접적인 처리를 하게 됩니다.<br>
      * 이런식으로 요청에 대한 핸들러를 직접적으로 사용하지 않고 인터페이스를 경유하여 오게되면 발생한 이벤트, 수신된 메시지 마다 다른 유형의 ServiceHandler 를 구현하여
      * 하나의 클래스에 모든 처리가 몰리게 되는 상황을 방지 할 수 있고 더욱 유연한 코드 작성이 가능하게 됩니다.
      * @param port
@@ -46,10 +46,10 @@ public class SimpleNettyRunner implements ServiceHandler {
     public void start(int port) {
         commandUtil = new CommandUtil();
         commandUtil.init();
-        InboundHandlerBindUtil inboundHandlerBindUtil = new InboundHandlerBindUtil();
-        inboundHandlerBindUtil.setServiceHandler(this);
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        InboundHandlerBindHelper InboundHandlerBindHelper = new InboundHandlerBindHelper();
+        InboundHandlerBindHelper.setServiceHandler(this);
+        EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+        EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
 
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
@@ -62,8 +62,8 @@ public class SimpleNettyRunner implements ServiceHandler {
                 protected void initChannel(SocketChannel socketChannel) {
                     ChannelPipeline pipeline = socketChannel.pipeline()
                             .addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
-                            .addLast("messageCodec", new MessageCodec())
-                            .addLast("nettyHandler", inboundHandlerBindUtil);
+                            .addLast("Codec", new Codec())
+                            .addLast("nettyHandler", InboundHandlerBindHelper);
                 }
             });
 
@@ -150,7 +150,7 @@ public class SimpleNettyRunner implements ServiceHandler {
     public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause) {
         channelHandlerContext.close();
         if (cause instanceof IOException) {
-            logger.debug("NETTY IO EXCEPTION | {}", cause.getMessage());
+            logger.error("NETTY IO EXCEPTION | {}", cause.getMessage());
             return;
         }
         printStackTrace(cause);

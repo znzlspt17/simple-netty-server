@@ -1,6 +1,6 @@
-package com.bunnyphoon.netcore.command;
+package com.znzlspt.netcore.command;
 
-import com.bunnyphoon.netcore.message.Message;
+import com.znzlspt.netcore.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

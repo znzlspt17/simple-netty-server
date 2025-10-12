@@ -1,7 +1,7 @@
-package com.bunnyphoon.server.command;
+package com.znzlspt.server.command;
 
-import com.bunnyphoon.netcore.message.Message;
-import com.bunnyphoon.server.service.CommandServiceImpl;
+import com.znzlspt.netcore.message.Message;
+import com.znzlspt.server.service.CommandServiceImpl;
 import io.netty.channel.Channel;
 
 /**

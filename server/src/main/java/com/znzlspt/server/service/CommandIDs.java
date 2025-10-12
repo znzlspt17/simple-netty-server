@@ -1,8 +1,4 @@
-package com.bunnyphoon.server.service;
-
-import java.util.HashMap;
-import java.util.Map;
-
+package com.znzlspt.server.service;
 
 /**
  * 서버와 클라이언트 간에 미리 기능과 커맨드 넘버를 정의해두는 정적 객체입니다.

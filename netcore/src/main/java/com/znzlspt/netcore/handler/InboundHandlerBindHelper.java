@@ -1,6 +1,5 @@
-package com.bunnyphoon.netcore.handler;
+package com.znzlspt.netcore.handler;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -10,8 +9,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * 실제 사용될 프로젝트에서 ServiceHandler 구현체를 전달해야합니다
  */
 
-@ChannelHandler.Sharable
-public class InboundHandlerBindUtil extends ChannelInboundHandlerAdapter {
+public class InboundHandlerBindHelper extends ChannelInboundHandlerAdapter {
 
     protected ServiceHandler handler;
 

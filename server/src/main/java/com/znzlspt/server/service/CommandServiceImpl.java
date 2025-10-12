@@ -1,7 +1,7 @@
-package com.bunnyphoon.server.service;
+package com.znzlspt.server.service;
 
-import com.bunnyphoon.netcore.command.Command;
-import com.bunnyphoon.netcore.message.Message;
+import com.znzlspt.netcore.command.Command;
+import com.znzlspt.netcore.message.Message;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 
@@ -28,9 +28,7 @@ public abstract class CommandServiceImpl extends Command {
     public abstract boolean execute(Message request);
 
     @Override
-    public String getName() {
-        return this.getClass().getName();
-    }
+    public String getName() { return this.getClass().getName(); }
 
     private Message createError(short commandId, byte errorCode) {
         Message response = Message.create();

@@ -1,12 +1,9 @@
-package com.bunnyphoon.server.service;
+package com.znzlspt.server.service;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * channelRead() 가 발생하여 요청이 들어왔을때 요청에 어떤 클래스를 제공해야하는지 도와주는 유틸클래스입니다.
- */
 public class CommandUtil {
 
     Map<Short, String> functions = new HashMap<>();

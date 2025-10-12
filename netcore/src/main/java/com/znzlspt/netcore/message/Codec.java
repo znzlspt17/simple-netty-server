@@ -1,4 +1,4 @@
-package com.bunnyphoon.netcore.message;
+package com.znzlspt.netcore.message;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -6,10 +6,7 @@ import io.netty.handler.codec.MessageToMessageCodec;
 
 import java.util.List;
 
-/**
- * Netty 에서 Message 와 ByteBuf 를 서로 변환 가능하도록 하는 코덱입니다.
- */
-public class MessageCodec extends MessageToMessageCodec<ByteBuf, Message> {
+public class Codec extends MessageToMessageCodec<ByteBuf, Message> {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Message message, List<Object> out) {
         ByteBuf encoded = message.getBuffer().copy();
