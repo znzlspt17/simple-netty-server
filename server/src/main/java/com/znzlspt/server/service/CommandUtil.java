@@ -1,6 +1,5 @@
 package com.znzlspt.server.service;
 
-import com.znzlspt.netcore.command.Command;
 import com.znzlspt.server.command.Echo;
 import com.znzlspt.server.command.Say;
 
@@ -10,7 +9,7 @@ import java.util.Map;
 
 public class CommandUtil {
 
-    Map<Short, Class<? extends Command>> functions = new HashMap<>();
+    Map<Short, Class<? extends CommandServiceImpl>> functions = new HashMap<>();
 
     public void init() {
         functions.clear();
