@@ -118,8 +118,15 @@ public class SimpleNettyRunner implements ServiceHandler {
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) {
         if (o instanceof Message message) {
             message.setChannel(channelHandlerContext.channel());
-            commandServiceImpl = commandUtil.findFunction(message.getCommand());
+            try {
+                commandServiceImpl = commandUtil.findFunction(message.getCommand());
+            } catch (IllegalArgumentException ex) {
+                logger.warn("Unsupported command received: {}", message.getCommand());
+                sendUnknownCommandError(message);
+                return;
+            }
             commandServiceImpl.setFunctions(commandUtil.getFunctions());
+            commandServiceImpl.setChannelGroup(channelGroup);
             commandServiceImpl.execute(message);
         }
     }
@@ -160,5 +167,19 @@ public class SimpleNettyRunner implements ServiceHandler {
         for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
             logger.error("NETTY EXCEPTION | {}", stackTraceElement);
         }
+    }
+
+    private void sendUnknownCommandError(Message message) {
+        Channel channel = message.getChannel();
+        if (channel == null) {
+            return;
+        }
+
+        Message response = Message.create();
+        response.init();
+        response.setCommand(0);
+        response.addString("Unsupported command: " + message.getCommand());
+
+        channel.writeAndFlush(response);
     }
 }

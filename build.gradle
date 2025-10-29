@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'com.gradleup.shadow' version '9.0.0'
+}
+
+group = 'com.znzlspt17'
+version = '1.0-SNAPSHOT'
+
+allprojects {
+    group = 'com.znzlspt17'
+    version = '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    
+    // ⭐ 이 부분 추가
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+}
+
+dependencies {
+    implementation project(':netcore')
+    implementation project(':server')
+}
+
+tasks.named('shadowJar') {
+    archiveBaseName = 'server'
+    archiveClassifier = 'jar-with-dependencies'
+
+    manifest {
+        attributes(
+            'Main-Class': 'com.znzlspt.Main'
+        )
+    }
+
+    mergeServiceFiles()
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named('build') {
+    dependsOn tasks.shadowJar
+}

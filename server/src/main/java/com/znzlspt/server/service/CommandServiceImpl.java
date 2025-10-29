@@ -10,14 +10,18 @@ import java.util.Map;
 public abstract class CommandServiceImpl extends Command {
 
     protected ChannelGroup channelGroup;
-    protected Map<Short, String> functions;
+    protected Map<Short, Class<? extends CommandServiceImpl>> functions;
 
-    public void setFunctions(Map<Short, String> functions) {
+    public void setFunctions(Map<Short, Class<? extends CommandServiceImpl>> functions) {
         this.functions = functions;
     }
 
     public ChannelGroup getChannelGroup() {
         return this.channelGroup;
+    }
+
+    public void setChannelGroup(ChannelGroup channelGroup) {
+        this.channelGroup = channelGroup;
     }
 
     /**

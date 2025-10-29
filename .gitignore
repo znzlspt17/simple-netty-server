@@ -4,9 +4,17 @@
 # Ignore Gradle build output directory
 **/build/
 
+# Ignore bin directories
+**/bin/
+
 # IntelliJ IDEA
 .idea
 *.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
 
 # Logs
 logs

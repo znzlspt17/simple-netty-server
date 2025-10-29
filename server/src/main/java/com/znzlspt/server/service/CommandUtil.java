@@ -1,16 +1,21 @@
 package com.znzlspt.server.service;
 
+import com.znzlspt.netcore.command.Command;
+import com.znzlspt.server.command.Echo;
+import com.znzlspt.server.command.Say;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CommandUtil {
 
-    Map<Short, String> functions = new HashMap<>();
+    Map<Short, Class<? extends Command>> functions = new HashMap<>();
 
     public void init() {
-        functions.put((short) 100, "com.cocoz.command.function.Echo");
-        functions.put((short) 101, "com.cocoz.command.function.Say");
+        functions.clear();
+        functions.put((short) 100, Echo.class);
+        functions.put((short) 101, Say.class);
     }
 
 
@@ -22,14 +27,14 @@ public class CommandUtil {
      */
     public CommandServiceImpl findFunction(short command) {
 
-        String funcName = functions.get(command);
-        Class<?> clazz;
+        Class<? extends CommandServiceImpl> clazz;
         CommandServiceImpl commandServiceImpl;
         try {
-            clazz = Class.forName(funcName);
-            commandServiceImpl = (CommandServiceImpl) clazz.getDeclaredConstructor().newInstance();
-        } catch (ClassNotFoundException e1) {
-            throw new RuntimeException(e1);
+            clazz = functions.get(command);
+            if (clazz == null) {
+                throw new IllegalArgumentException("Unsupported command id: " + command);
+            }
+            commandServiceImpl = clazz.getDeclaredConstructor().newInstance();
         } catch (InvocationTargetException e2) {
             throw new RuntimeException(e2);
         } catch (InstantiationException e3) {
@@ -42,7 +47,7 @@ public class CommandUtil {
         return commandServiceImpl;
     }
 
-    public Map<Short, String> getFunctions() {
+    public Map<Short, Class<? extends CommandServiceImpl>> getFunctions() {
         return functions;
     }
 }
