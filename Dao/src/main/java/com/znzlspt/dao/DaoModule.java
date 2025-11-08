@@ -13,7 +13,6 @@ import static com.znzlspt.dao.mapper.R2dbcMapper.executeAndSingle;
 
 /**
  * DAO 모듈의 진입점을 담당할 클래스입니다.
- * 필요한 컴포넌트 구성이나 초기화 코드를 여기에 채워 넣으세요.
  */
 public final class DaoModule {
 
