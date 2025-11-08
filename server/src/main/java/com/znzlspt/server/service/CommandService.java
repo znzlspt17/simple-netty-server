@@ -1,18 +1,22 @@
 package com.znzlspt.server.service;
 
+import com.znzlspt.dao.DaoModule;
 import com.znzlspt.netcore.command.Command;
 import com.znzlspt.netcore.message.Message;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
+import io.netty.util.AttributeKey;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
-public abstract class CommandServiceImpl extends Command {
+public abstract class CommandService extends Command {
 
     protected ChannelGroup channelGroup;
-    protected Map<Short, Class<? extends CommandServiceImpl>> functions;
+    protected Map<Short, Supplier<? extends CommandService>> functions;
+    protected final DaoModule dao = DaoModule.getInstance();
 
-    public void setFunctions(Map<Short, Class<? extends CommandServiceImpl>> functions) {
+    public void setFunctions(Map<Short, Supplier<? extends CommandService>> functions) {
         this.functions = functions;
     }
 
@@ -24,15 +28,19 @@ public abstract class CommandServiceImpl extends Command {
         this.channelGroup = channelGroup;
     }
 
+
     /**
-     * CommandSerivce를 상속받은 모든 클래스는 execute 메소드를 구현하여 기능을 처리하게 됩니다.
+     * CommandService를 상속받은 모든 클래스는 execute 메소드를 구현하여 기능을 처리하게 됩니다.
+     *
      * @param request
      * @return
      */
     public abstract boolean execute(Message request);
 
     @Override
-    public String getName() { return this.getClass().getName(); }
+    public String getName() {
+        return this.getClass().getName();
+    }
 
     private Message createError(short commandId, byte errorCode) {
         Message response = Message.create();
@@ -47,8 +55,8 @@ public abstract class CommandServiceImpl extends Command {
         return message.getChannel();
     }
 
-    protected String getUser(Message message) {
-        return message.getChannel().remoteAddress().toString() + "@" + message.getChannel().id().asShortText();
+    protected Object getUser(Message message) {
+        return message.getChannel().attr(AttributeKey.valueOf("MyUser")).get();
     }
 
     protected void sendError(Message message, int errorCode) {
@@ -56,6 +64,12 @@ public abstract class CommandServiceImpl extends Command {
 
         if (channel != null) {
             channel.write(createError(message.getCommand(), (byte) errorCode));
+        }
+    }
+
+    protected void broadcast(Message message) {
+        if (this.channelGroup != null) {
+            this.channelGroup.writeAndFlush(message);
         }
     }
 

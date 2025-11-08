@@ -3,32 +3,26 @@ package com.znzlspt.server.command;
 import com.znzlspt.netcore.message.Message;
 import com.znzlspt.server.MyUser;
 import com.znzlspt.server.service.CommandService;
-import io.netty.channel.Channel;
+import com.znzlspt.server.service.ServerTime;
+
 
 /**
- * CommandID CHAT_ECHO = 110
+ * CommandID TIME_SYNC = 102
  * commandService.execute(message); 을 통해 실행되는 클래스입니다.
  */
 
-public class Echo extends CommandService {
-
+public class TimeSync extends CommandService {
     @Override
     public boolean execute(Message request) {
-
         MyUser myUser = (MyUser) getUser(request);
-        short command = request.getCommand();
-        String chat = request.getString();
 
         Message response = Message.create();
         response.init()
-                .setCommand(command)
-                .addString(myUser.getNick())
-                .addString(chat)
+                .setCommand(request.getCommand())
+                .addLong(ServerTime.nowGmtPlus9Gmt())
                 .finalizeBuffer();
-
         myUser.send(response);
 
-        return true;
+        return false;
     }
-
 }

@@ -38,6 +38,7 @@ dependencies {
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation 'ch.qos.logback:logback-classic:1.5.19'
 
+    implementation 'io.projectreactor:reactor-core:3.7.12'
     implementation project(':netcore')
 }
 

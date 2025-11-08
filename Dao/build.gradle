@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.znzlspt'
+version = '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+test {
+    useJUnitPlatform()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.19'
+
+    implementation 'io.r2dbc:r2dbc-mssql:1.0.3.RELEASE'
+    implementation 'io.r2dbc:r2dbc-pool:1.0.2.RELEASE'
+    implementation 'io.projectreactor:reactor-core:3.7.12'
+    implementation 'at.favre.lib:bcrypt:0.10.2'
+
+    //Test
+    runtimeOnly 'io.r2dbc:r2dbc-h2:1.1.0.RELEASE'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.0.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:6.0.0'
+    testImplementation 'org.junit.platform:junit-platform-launcher:6.0.0'
+    testImplementation 'io.projectreactor:reactor-test:3.7.12'
+
+}

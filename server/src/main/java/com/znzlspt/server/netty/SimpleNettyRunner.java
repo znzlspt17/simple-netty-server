@@ -4,9 +4,9 @@ import com.znzlspt.netcore.handler.InboundHandlerBindHelper;
 import com.znzlspt.netcore.handler.ServiceHandler;
 import com.znzlspt.netcore.message.Codec;
 import com.znzlspt.netcore.message.Message;
-import com.znzlspt.server.service.CommandIDs;
-import com.znzlspt.server.service.CommandServiceImpl;
-import com.znzlspt.server.service.CommandUtil;
+import com.znzlspt.server.service.CommandDispatcher;
+import com.znzlspt.server.service.CommandRegistry;
+import com.znzlspt.server.service.command.ResponseCommand;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
@@ -29,8 +29,8 @@ public class SimpleNettyRunner implements ServiceHandler {
 
     private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    CommandServiceImpl commandServiceImpl;
-    CommandUtil commandUtil;
+    CommandDispatcher commandDispatcher;
+    CommandRegistry commandRegistry;
 
     /**
      * Netty 서버사이드의 ServerBootstrap 의 간단한 구성입니다<br>
@@ -44,8 +44,8 @@ public class SimpleNettyRunner implements ServiceHandler {
      */
 
     public void start(int port) {
-        commandUtil = new CommandUtil();
-        commandUtil.init();
+    commandRegistry = new CommandRegistry();
+    commandDispatcher = new CommandDispatcher(commandRegistry, channelGroup);
         InboundHandlerBindHelper InboundHandlerBindHelper = new InboundHandlerBindHelper();
         InboundHandlerBindHelper.setServiceHandler(this);
         EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
@@ -60,10 +60,10 @@ public class SimpleNettyRunner implements ServiceHandler {
             serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) {
-                    ChannelPipeline pipeline = socketChannel.pipeline()
-                            .addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
-                            .addLast("Codec", new Codec())
-                            .addLast("nettyHandler", InboundHandlerBindHelper);
+            socketChannel.pipeline()
+                .addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
+                .addLast("Codec", new Codec())
+                .addLast("nettyHandler", InboundHandlerBindHelper);
                 }
             });
 
@@ -80,7 +80,7 @@ public class SimpleNettyRunner implements ServiceHandler {
     }
 
     /**
-     * 채널이 연결됐을때 발생하는 메소드<br>
+     * 채널이 연결됐을때 호출되는 메소드<br>
      * 채널이 등록됐을 때와는 다르며, 송수신이 가능한 상태일때 활성화 됩니다.
      * @param channelHandlerContext
      */
@@ -90,14 +90,14 @@ public class SimpleNettyRunner implements ServiceHandler {
 
         Message message = Message.create();
         message.init();
-        message.setCommand(CommandIDs.LOGIN_ALLOW);
+        message.setCommand(ResponseCommand.OK);
 
         logger.info("send message | command : {}, size : {}", message.getCommand(), message.getSize());
         channelHandlerContext.writeAndFlush(message);
     }
 
     /**
-     * 채널의 연결이 끊어졌을 경우 발생하는 메소드<br>
+     * 채널의 연결이 끊어졌을 경우 호출되는 메소드<br>
      * 연결된 채널을 관리하는 채널 그룹에서 해당 ChannelHandlerContext 를 제거해줍니다.
      * @param channelHandlerContext
      */
@@ -108,9 +108,7 @@ public class SimpleNettyRunner implements ServiceHandler {
 
     /**
      * 메시지가 수신될 때 호출되는 메소드<br>
-     * 커맨드 서비스에 수신된 메세지의 커맨드를 꺼내 commandUtil.findFunction() 전달하고 수신된 요청을 처리할 수 있는 클래스를 커맨드서비스에 전달합니다.
-     * 이렇게 되면 하나의 commandService 에 commandService 를 상속받은 각기 다른 기능을 하는 객체들을 수신된 요청의 처리에 사용할 수 있는 장점이 있습니다.
-     * 그 뒤에 commandService 에 수신된 메세지를 전달하여 필요한 처리를 하게 됩니다.
+     * 수신된 커맨드 값을 기반으로 {@link CommandDispatcher}가 적절한 처리기를 찾아 실행합니다.
      * @param channelHandlerContext
      * @param o 사용자가 정의의 메시지 타입을 MessageCodec의 decode에 변환되어 들어오게 되지만 유연성을 위해서 Object 타입으로 전달됩니다.
      */
@@ -118,16 +116,11 @@ public class SimpleNettyRunner implements ServiceHandler {
     public void channelRead(ChannelHandlerContext channelHandlerContext, Object o) {
         if (o instanceof Message message) {
             message.setChannel(channelHandlerContext.channel());
-            try {
-                commandServiceImpl = commandUtil.findFunction(message.getCommand());
-            } catch (IllegalArgumentException ex) {
+            boolean dispatched = commandDispatcher.dispatch(message);
+            if (!dispatched) {
                 logger.warn("Unsupported command received: {}", message.getCommand());
                 sendUnknownCommandError(message);
-                return;
             }
-            commandServiceImpl.setFunctions(commandUtil.getFunctions());
-            commandServiceImpl.setChannelGroup(channelGroup);
-            commandServiceImpl.execute(message);
         }
     }
 
