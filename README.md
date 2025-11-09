@@ -200,6 +200,7 @@ java -jar server/build/libs/simple-netty-server.jar
 - Backend
 - Netty, Reactor, R2DBC 기반 서버 설계 및 최적화에 집중  
 - GitHub: [https://github.com/znzlspt17](https://github.com/znzlspt17)
+- E-mail: znzlsit@naver.com
 
 ---
 
