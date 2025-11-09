@@ -1,4 +1,4 @@
-package com.znzlspt;
+package com.znzlspt.server;
 
 import com.znzlspt.dao.DaoModule;
 import com.znzlspt.server.netty.SimpleNettyRunner;
