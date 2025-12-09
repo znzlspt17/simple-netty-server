@@ -4,12 +4,14 @@ plugins {
     id 'com.gradleup.shadow' version '9.0.0'
 }
 
-group = 'com.znzlspt17'
-version = '1.0-SNAPSHOT'
+// bnd 플러그인 설정은 subprojects에서 적용
+
+group = 'com.znzlspt'
+version = '1.0.0'
 
 allprojects {
-    group = 'com.znzlspt17'
-    version = '1.0-SNAPSHOT'
+    group = 'com.znzlspt'
+    version = '1.0.0'
 
     repositories {
         mavenCentral()
@@ -19,17 +21,33 @@ allprojects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'eclipse'
-    
+
     // ⭐ 이 부분 추가
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // UTF-8 인코딩 설정
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Test) {
+        systemProperty 'file.encoding', 'UTF-8'
     }
 }
 
 dependencies {
+    implementation project(':dao')
     implementation project(':netcore')
     implementation project(':server')
+
+    // Felix Framework for OSGi
+    implementation 'org.apache.felix:org.apache.felix.framework:7.0.5'
+    implementation 'org.apache.felix:org.apache.felix.scr:2.2.10'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
 }
 
 tasks.named('shadowJar') {
@@ -47,6 +65,73 @@ tasks.named('shadowJar') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+// feature.xml 생성 태스크
+task generateFeatureXml {
+    def outputFile = file("$buildDir/kar-temp/repository/feature.xml")
+    outputs.file(outputFile)
+
+    def projectGroup = project.group
+    def projectVersion = project.version
+
+    doLast {
+        outputFile.parentFile.mkdirs()
+        outputFile.text =
+"""<?xml version="1.0" encoding="UTF-8"?>
+<features name="simple-netty-server-${projectVersion}" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0">
+    <feature name="simple-netty-server" version="${projectVersion}">
+        <feature>scr</feature>
+
+        <!-- Netty (기본 모듈만) -->
+        <bundle>mvn:io.netty/netty-common/4.2.6.Final</bundle>
+        <bundle>mvn:io.netty/netty-buffer/4.2.6.Final</bundle>
+        <bundle>mvn:io.netty/netty-resolver/4.2.6.Final</bundle>
+        <bundle>mvn:io.netty/netty-transport/4.2.6.Final</bundle>
+        <bundle>mvn:io.netty/netty-transport-native-unix-common/4.2.6.Final</bundle>
+
+        <!-- Reactor -->
+        <bundle>mvn:io.projectreactor/reactor-core/3.7.12</bundle>
+        <bundle>mvn:org.reactivestreams/reactive-streams/1.0.4</bundle>
+
+        <!-- Application bundles -->
+        <bundle>mvn:${projectGroup}/dao/${projectVersion}</bundle>
+        <bundle>mvn:${projectGroup}/netcore/${projectVersion}</bundle>
+        <bundle>mvn:${projectGroup}/server/${projectVersion}</bundle>
+    </feature>
+</features>
+"""
+    }
+}
+
+// KAR (Karaf Archive) 생성 태스크
+tasks.register('createKar', Zip) {
+    dependsOn subprojects.collect { it.tasks.jar }
+    dependsOn generateFeatureXml
+
+    archiveBaseName = 'simple-netty-server'
+    archiveExtension = 'kar'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+
+    def projectGroup = project.group
+    def projectVersion = project.version
+    def repoPrefix = "repository/${projectGroup.replace('.', '/')}"
+
+    // repository 디렉토리 구조로 번들 추가
+    from(project(':dao').tasks.jar.archiveFile) {
+        into "${repoPrefix}/dao/${projectVersion}"
+    }
+    from(project(':netcore').tasks.jar.archiveFile) {
+        into "${repoPrefix}/netcore/${projectVersion}"
+    }
+    from(project(':server').tasks.jar.archiveFile) {
+        into "${repoPrefix}/server/${projectVersion}"
+    }
+
+    // feature.xml 추가
+    from("$buildDir/kar-temp/repository") {
+        into "repository"
+    }
+}
+
 tasks.named('build') {
-    dependsOn tasks.shadowJar
+    dependsOn tasks.shadowJar, tasks.createKar
 }

@@ -2,16 +2,29 @@ package com.znzlspt.netcore.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * Netty의 ChannelInboundHandlerAdapter를 확장하여 클라이언트가 서버에 연결됐을 때, 메시지를 수신했을 때, 이벤트가 발생했을 때 호출되는 콜백 메소드 집합입니다.<br>
  * 실제 사용될 프로젝트에서 ServiceHandler 구현체를 전달해야합니다
  */
-
+@Component(service = InboundHandlerBindHelper.class, immediate = true)
 public class InboundHandlerBindHelper extends ChannelInboundHandlerAdapter {
 
+    private static final Logger logger = LoggerFactory.getLogger(InboundHandlerBindHelper.class);
+
+    @Reference
     protected ServiceHandler handler;
+
+    @Activate
+    public void activate() {
+        logger.info("InboundHandlerBindHelper activated with ServiceHandler: {}", handler != null);
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {

@@ -13,21 +13,21 @@ import static com.znzlspt.dao.mapper.R2dbcMapper.executeAndSingle;
 /**
  * DAO 모듈의 진입점을 담당할 클래스입니다.
  */
-public final class DaoModule {
+public final class UserDao {
 
-    private static volatile DaoModule instance;
+    private static volatile UserDao instance;
     private ConnectionFactory conn;
 
 
-    private DaoModule() {
+    public UserDao() {
         conn = DaoConnectionPool.connectionFactory();
     }
 
-    public static DaoModule getInstance() {
+    public static UserDao getInstance() {
         if (instance == null) {
-            synchronized (DaoModule.class) {
+            synchronized (UserDao.class) {
                 if (instance == null) {
-                    instance = new DaoModule();
+                    instance = new UserDao();
                 }
             }
         }

@@ -1,17 +1,13 @@
 plugins {
     id 'java'
-    
 }
 
 group = 'com.znzlspt'
 version = '1.0.0'
 
-sourceSets {
-  main {
-    java {
-      srcDirs = ['src/main/java']
-    }
-  }
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 test {
@@ -22,28 +18,26 @@ repositories {
     mavenCentral()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 dependencies {
-    compileOnly project(':dao')
-    compileOnly project(':netcore')
+
+    implementation 'org.apache.felix:org.apache.felix.framework:7.0.5'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+
+    implementation 'io.r2dbc:r2dbc-mssql:1.0.3.RELEASE'
+    implementation 'io.r2dbc:r2dbc-pool:1.0.2.RELEASE'
+    implementation 'io.projectreactor:reactor-core:3.7.12'
+    implementation 'at.favre.lib:bcrypt:0.10.2'
+    implementation 'org.osgi:osgi.cmpn:7.0.0'
 
     compileOnly 'org.osgi:osgi.core:7.0.0'
-    compileOnly 'org.apache.felix:org.apache.felix.framework:7.0.5'
 
-    implementation 'org.osgi:osgi.cmpn:7.0.0'
-    implementation 'io.netty:netty-buffer:4.2.6.Final'
-    implementation 'io.netty:netty-handler:4.2.6.Final'
-    implementation 'io.netty:netty-transport:4.2.6.Final'
-    implementation 'org.slf4j:slf4j-api:2.0.17'
-    implementation 'io.projectreactor:reactor-core:3.7.12'
+    //Test
+    runtimeOnly 'io.r2dbc:r2dbc-h2:1.1.0.RELEASE'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.0.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:6.0.0'
+    testImplementation 'org.junit.platform:junit-platform-launcher:6.0.0'
+    testImplementation 'io.projectreactor:reactor-test:3.7.12'
 
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 def bv = project.version.toString().replace('-', '.')
@@ -58,14 +52,12 @@ jar {
                 'Bundle-ManifestVersion': '2',
                 'Bundle-SymbolicName': "${project.group}.${project.name}",
                 'Bundle-Version': bv,
-                'Bundle-Name': 'Server Module',
-                'Export-Package': "com.znzlspt.server.*;version=${bv}",
+                'Bundle-Name': 'DAO Module',
+                'Export-Package': "com.znzlspt.dao.*;version=${bv}",
                 'Import-Package': 'org.osgi.framework;version="[1.8,2)",' +
-                        'io.netty.*;version="[4.1,5)",' +
-                        'org.slf4j;version="[1.7,3)",' +
+                        'io.r2dbc.*;resolution:=optional,' +
                         'reactor.core.*;resolution:=optional,' +
-                        'com.znzlspt.netcore.*;resolution:=optional,' +
-                        'com.znzlspt.dao.*;resolution:=optional',
+                        'org.slf4j;version="[1.7,3)"',
                 'Require-Capability': 'osgi.extender;filter:="(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))"'
         )
         if (hasSc) {

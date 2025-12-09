@@ -1,5 +1,6 @@
 package com.znzlspt.server.command;
 
+import com.znzlspt.dao.UserDao;
 import com.znzlspt.netcore.message.Message;
 import com.znzlspt.server.MyUser;
 import com.znzlspt.server.service.CommandService;
@@ -25,8 +26,8 @@ public class Say extends CommandService {
         UUID uuid = myUser.getUUID();
         String nick = myUser.getNick();
 
-
-        dao.insertChatLog(uuid, type, chat);
+        UserDao userDao = (UserDao) daoModule.getUserDao();
+        userDao.insertChatLog(uuid, type, chat);
 
         ChannelGroup channelGroup = this.getChannelGroup();
 

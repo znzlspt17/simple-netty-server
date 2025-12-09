@@ -1,6 +1,7 @@
 package com.znzlspt.server.service;
 
-import com.znzlspt.dao.DaoModule;
+import com.znzlspt.dao.IDaoModule;
+import com.znzlspt.dao.UserDao;
 import com.znzlspt.netcore.command.Command;
 import com.znzlspt.netcore.message.Message;
 import io.netty.channel.Channel;
@@ -12,22 +13,28 @@ import java.util.function.Supplier;
 
 public abstract class CommandService extends Command {
 
-    protected ChannelGroup channelGroup;
-    protected Map<Short, Supplier<? extends CommandService>> functions;
-    protected final DaoModule dao = DaoModule.getInstance();
 
+    protected Map<Short, Supplier<? extends CommandService>> functions;
+
+    protected ChannelGroup channelGroup;
+    protected IDaoModule daoModule;
+    protected UserDao userDao;
     public void setFunctions(Map<Short, Supplier<? extends CommandService>> functions) {
         this.functions = functions;
-    }
-
-    public ChannelGroup getChannelGroup() {
-        return this.channelGroup;
     }
 
     public void setChannelGroup(ChannelGroup channelGroup) {
         this.channelGroup = channelGroup;
     }
 
+    public ChannelGroup getChannelGroup() {
+        return this.channelGroup;
+    }
+
+    public void setDaoModule(IDaoModule daoModule) {
+        this.daoModule = daoModule;
+        userDao = (UserDao) daoModule.getUserDao();
+    }
 
     /**
      * CommandService를 상속받은 모든 클래스는 execute 메소드를 구현하여 기능을 처리하게 됩니다.

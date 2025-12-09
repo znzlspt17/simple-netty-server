@@ -1,9 +1,10 @@
 plugins {
-    id 'java'
+    id 'java-library'
+    
 }
 
 group = 'com.znzlspt'
-version = '1.0-SNAPSHOT'
+version = '1.0.0'
 
 sourceSets {
   main {
@@ -13,32 +14,58 @@ sourceSets {
   }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 repositories {
     mavenCentral()
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
+    compileOnly project(':dao')
+
+    compileOnly 'org.osgi:osgi.core:7.0.0'
+    implementation 'org.osgi:osgi.cmpn:7.0.0'
+    implementation 'org.apache.felix:org.apache.felix.framework:7.0.5'
+    implementation 'io.netty:netty-buffer:4.2.6.Final'
+    implementation 'io.netty:netty-handler:4.2.6.Final'
+    implementation 'io.netty:netty-transport:4.2.6.Final'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // https://mvnrepository.com/artifact/io.netty/netty-buffer
-    implementation 'io.netty:netty-buffer:4.2.6.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-handler
-    implementation 'io.netty:netty-handler:4.2.6.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-transport
-    implementation 'io.netty:netty-transport:4.2.6.Final'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    implementation 'org.slf4j:slf4j-api:2.0.17'
-    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    implementation 'ch.qos.logback:logback-classic:1.5.19'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+def bv = project.version.toString().replace('-', '.')
+def scBuildDir = file("${buildDir}/resources/main/OSGI-INF")
+def scSrcDir = file("src/main/resources/OSGI-INF")
+def hasSc = (scBuildDir.exists() && scBuildDir.listFiles()?.length > 0) ||
+        (scSrcDir.exists() && scSrcDir.listFiles()?.length > 0)
+
+jar {
+    manifest {
+        attributes(
+                'Bundle-ManifestVersion': '2',
+                'Bundle-SymbolicName': "${project.group}.${project.name}",
+                'Bundle-Version': bv,
+                'Bundle-Name': 'Netcore Module',
+                'Export-Package': "com.znzlspt.netcore.*;version=${bv}",
+                'Import-Package': 'org.osgi.framework;version="[1.8,2)",' +
+                        'io.netty.*;version="[4.1,5)",' +
+                        'org.slf4j;version="[1.7,3)",' +
+                        'com.znzlspt.dao.*;resolution:=optional',
+                'Require-Capability': 'osgi.extender;filter:="(&(osgi.extender=osgi.component)(version>=1.3)(!(version>=2.0)))"'
+        )
+        if (hasSc) {
+            attributes('Service-Component': 'OSGI-INF/*.xml')
+        }
+    }
 }

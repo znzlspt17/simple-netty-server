@@ -49,3 +49,7 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+/build.txt
+/deps.txt
+/search.txt
+/tree.txt

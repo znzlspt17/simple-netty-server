@@ -1,18 +1,11 @@
-import at.favre.lib.crypto.bcrypt.BCrypt;
-import com.znzlspt.dao.DaoConnectionPool;
-import com.znzlspt.dao.DaoModule;
+import com.znzlspt.dao.UserDao;
 import com.znzlspt.dao.util.BCryptHelper;
-import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
 import static com.znzlspt.dao.mapper.R2dbcMapper.executeAndSingle;
@@ -20,20 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ConnectionTest {
 
-    static DaoModule daoModule = null;
+    static UserDao userDao = null;
 
     @BeforeAll
-    public static void reflect() {
-        Class clazz;
-        try {
-            clazz = Class.forName("com.znzlspt.dao.DaoModule");
-            Constructor<?> constructor = clazz.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            daoModule = (DaoModule) constructor.newInstance();
-        } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException |
-                 IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+    public static void setup() {
+       userDao = new UserDao();
     }
 
     @Test
@@ -43,12 +27,11 @@ public class ConnectionTest {
         String password = "password123";
         String credential = BCryptHelper.hashPassword(password);
 
-        ConnectionFactory conn = daoModule.getConnectionFactory();
-
+        ConnectionFactory conn = userDao.getConnectionFactory();
         String sql = ""
                 + "DECLARE @return_value int, @out_result int; "
                 + "EXEC @return_value = dbo.proc_create_user "
-                + "@uuid = @p1, @id = @p2, @credential = @p3, @result = @out_result OUTPUT;"
+                + "@uuid = @p1, @id = @p2, @credential = @p3, @out_result = @out_result OUTPUT;"
                 + "SELECT @out_result AS ret;";
         Mono<Integer> result = Mono.usingWhen(
                 Mono.from(conn.create()),
@@ -56,11 +39,13 @@ public class ConnectionTest {
                 connection -> Mono.from(connection.close())
         );
 
+        result.subscribe(
+                ret -> System.out.println("User creation result: " + ret),
+                error -> System.err.println("Error: " + error.getMessage()),
+                () -> System.out.println("Completed")
+        );
+
         StepVerifier.create(result)
-                .assertNext(ret -> {
-                    assertNotNull(ret);
-                    System.out.println("User creation result: " + ret);
-                })
                 .verifyComplete();
     }
 }

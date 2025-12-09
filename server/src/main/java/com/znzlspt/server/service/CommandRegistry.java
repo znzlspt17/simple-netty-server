@@ -2,6 +2,7 @@ package com.znzlspt.server.service;
 
 import com.znzlspt.server.command.*;
 import com.znzlspt.server.service.command.RequestCommand;
+import org.osgi.service.component.annotations.Component;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import java.util.function.Supplier;
 /**
  * 커맨드 ID와 실행할 구현체 생성을 매핑하는 레지스트리입니다.
  */
+@Component(immediate = true)
 public class CommandRegistry {
 
     private final Map<Short, Supplier<? extends CommandService>> registry = new HashMap<>();

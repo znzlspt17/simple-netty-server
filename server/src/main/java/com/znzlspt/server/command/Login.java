@@ -1,10 +1,10 @@
 package com.znzlspt.server.command;
 
+import com.znzlspt.dao.UserDao;
 import com.znzlspt.dao.model.LocalUser;
 import com.znzlspt.netcore.message.Message;
 import com.znzlspt.server.MyUser;
 import com.znzlspt.server.service.CommandService;
-import com.znzlspt.server.service.command.RequestCommand;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import reactor.core.publisher.Mono;
@@ -22,7 +22,7 @@ public class Login extends CommandService {
         String id = request.getString();
         String credential = request.getString();
 
-        Mono<LocalUser> mono = dao.loginUser(id, credential);
+        Mono<LocalUser> mono = userDao.loginUser(id, credential);
 
         MyUser myUser = new MyUser();
 

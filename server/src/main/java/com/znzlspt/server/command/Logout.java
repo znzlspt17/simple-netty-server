@@ -1,11 +1,10 @@
 package com.znzlspt.server.command;
 
+import com.znzlspt.dao.UserDao;
 import com.znzlspt.netcore.message.Message;
 import com.znzlspt.server.MyUser;
 import com.znzlspt.server.service.CommandService;
-import com.znzlspt.server.service.command.RequestCommand;
 import io.netty.channel.Channel;
-import io.netty.channel.group.ChannelGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +27,11 @@ public class Logout extends CommandService {
         Channel storedChannel = user.getChannel();
         UUID uuid = user.getUUID();
 
+        UserDao userDao = (UserDao) daoModule.getUserDao();
+
         if (channel.equals(user.getChannel())) {
             channelGroup.remove(channel);
-            dao.logoutUser(uuid);
+            userDao.logoutUser(uuid);
             channel.close();
 
             return false;
@@ -38,7 +39,7 @@ public class Logout extends CommandService {
 
             channelGroup.remove(storedChannel);
             channelGroup.remove(channel);
-            dao.logoutUser(uuid);
+            userDao.logoutUser(uuid);
             storedChannel.disconnect();
             channel.close();
 
