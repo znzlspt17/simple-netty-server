@@ -2,10 +2,8 @@ package com.znzlspt.server.command;
 
 import com.znzlspt.netcore.message.Message;
 import com.znzlspt.server.MyUser;
-import com.znzlspt.server.service.CommandService;
-import com.znzlspt.server.service.command.RequestCommand;
+import com.znzlspt.server.service.ServerCommandService;
 import io.netty.channel.Channel;
-import io.netty.channel.group.ChannelGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +14,7 @@ import java.util.UUID;
  * commandService.execute(message); 을 통해 실행되는 클래스입니다.
  */
 
-public class Logout extends CommandService {
+public class Logout extends ServerCommandService {
 
     Logger logger = LoggerFactory.getLogger(Logout.class);
 

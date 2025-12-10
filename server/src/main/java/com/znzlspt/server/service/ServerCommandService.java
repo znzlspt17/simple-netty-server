@@ -3,6 +3,7 @@ package com.znzlspt.server.service;
 import com.znzlspt.dao.DaoModule;
 import com.znzlspt.netcore.command.Command;
 import com.znzlspt.netcore.message.Message;
+import com.znzlspt.server.service.command.ResponseCommand;
 import io.netty.channel.Channel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.util.AttributeKey;
@@ -10,13 +11,13 @@ import io.netty.util.AttributeKey;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public abstract class CommandService extends Command {
+public abstract class ServerCommandService extends Command {
 
     protected ChannelGroup channelGroup;
-    protected Map<Short, Supplier<? extends CommandService>> functions;
-    protected final DaoModule dao = DaoModule.getInstance();
+    protected Map<Short, Supplier<? extends ServerCommandService>> functions;
+    protected DaoModule dao;
 
-    public void setFunctions(Map<Short, Supplier<? extends CommandService>> functions) {
+    public void setFunctions(Map<Short, Supplier<? extends ServerCommandService>> functions) {
         this.functions = functions;
     }
 
@@ -26,6 +27,10 @@ public abstract class CommandService extends Command {
 
     public void setChannelGroup(ChannelGroup channelGroup) {
         this.channelGroup = channelGroup;
+    }
+
+    public void setDao(DaoModule dao) {
+        this.dao = dao;
     }
 
 
@@ -45,7 +50,7 @@ public abstract class CommandService extends Command {
     private Message createError(short commandId, byte errorCode) {
         Message response = Message.create();
         response.init();
-        response.setCommand(0);
+        response.setCommand(ResponseCommand.ERROR);
         response.addShort(commandId);
         response.addByte(errorCode);
         return response;
@@ -56,14 +61,14 @@ public abstract class CommandService extends Command {
     }
 
     protected Object getUser(Message message) {
-        return message.getChannel().attr(AttributeKey.valueOf("MyUser")).get();
+        return message.getChannel().attr(AttributeKey.valueOf("user")).get();
     }
 
     protected void sendError(Message message, int errorCode) {
         Channel channel = message.getChannel();
 
         if (channel != null) {
-            channel.write(createError(message.getCommand(), (byte) errorCode));
+            channel.writeAndFlush(createError(message.getCommand(), (byte) errorCode));
         }
     }
 

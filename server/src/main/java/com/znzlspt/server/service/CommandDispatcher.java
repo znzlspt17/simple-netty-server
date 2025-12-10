@@ -21,7 +21,7 @@ public class CommandDispatcher {
     }
 
     public boolean dispatch(Message message) {
-        CommandService handler;
+        ServerCommandService handler;
         try {
             handler = registry.create(message.getCommand());
         } catch (IllegalArgumentException ex) {
@@ -30,12 +30,15 @@ public class CommandDispatcher {
 
         handler.setChannelGroup(channelGroup);
         handler.setFunctions(registry.view());
+        handler.setDao(registry.getDaoModule());
 
         try {
             handler.execute(message);
         } catch (RuntimeException ex) {
             logger.error("Command execution failed | command: {}, cause: {}", message.getCommand(), ex.getMessage());
             throw ex;
+
+
         }
         return true;
     }

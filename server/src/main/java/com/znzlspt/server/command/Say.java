@@ -2,7 +2,7 @@ package com.znzlspt.server.command;
 
 import com.znzlspt.netcore.message.Message;
 import com.znzlspt.server.MyUser;
-import com.znzlspt.server.service.CommandService;
+import com.znzlspt.server.service.ServerCommandService;
 import io.netty.channel.group.ChannelGroup;
 
 import java.util.UUID;
@@ -12,7 +12,7 @@ import java.util.UUID;
  * commandService.execute(message); 을 통해 실행되는 클래스입니다.
  */
 
-public class Say extends CommandService {
+public class Say extends ServerCommandService {
 
     @Override
     public boolean execute(Message message) {
@@ -24,7 +24,6 @@ public class Say extends CommandService {
 
         UUID uuid = myUser.getUUID();
         String nick = myUser.getNick();
-
 
         dao.insertChatLog(uuid, type, chat);
 
@@ -39,6 +38,6 @@ public class Say extends CommandService {
 
         broadcast(response);
 
-        return false;
+        return true;
     }
 }

@@ -11,7 +11,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleState;
@@ -20,17 +20,19 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+@Service
 public class SimpleNettyRunner implements ServiceHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleNettyRunner.class);
 
     private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    CommandDispatcher commandDispatcher;
-    CommandRegistry commandRegistry;
+    private final CommandDispatcher commandDispatcher;
+    private final CommandRegistry commandRegistry;
 
     /**
      * Netty 서버사이드의 ServerBootstrap 의 간단한 구성입니다<br>
@@ -40,36 +42,42 @@ public class SimpleNettyRunner implements ServiceHandler {
      * InboundHandlerBindHelper 는 들어오는 모든 이벤트를 SimpleNetty (ServiceHandler 의 구현) 에게 건네주어 이 안에서 메시지에 대한 직접적인 처리를 하게 됩니다.<br>
      * 이런식으로 요청에 대한 핸들러를 직접적으로 사용하지 않고 인터페이스를 경유하여 오게되면 발생한 이벤트, 수신된 메시지 마다 다른 유형의 ServiceHandler 를 구현하여
      * 하나의 클래스에 모든 처리가 몰리게 되는 상황을 방지 할 수 있고 더욱 유연한 코드 작성이 가능하게 됩니다.
-     * @param port
      */
 
+    public SimpleNettyRunner(CommandRegistry commandRegistry) {
+        this.commandRegistry = commandRegistry;
+        this.commandDispatcher = new CommandDispatcher(commandRegistry, channelGroup);
+    }
+
+    /**
+     * Netty 서버를 시작합니다.
+     * @param port 바인딩할 포트 번호
+     */
     public void start(int port) {
-    commandRegistry = new CommandRegistry();
-    commandDispatcher = new CommandDispatcher(commandRegistry, channelGroup);
-        InboundHandlerBindHelper InboundHandlerBindHelper = new InboundHandlerBindHelper();
-        InboundHandlerBindHelper.setServiceHandler(this);
-        EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
-        EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+        InboundHandlerBindHelper inboundHandlerBindHelper = new InboundHandlerBindHelper();
+        inboundHandlerBindHelper.setServiceHandler(this);
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
 
             serverBootstrap.group(bossGroup, workerGroup);
             serverBootstrap.channel(NioServerSocketChannel.class);
-            serverBootstrap.option(ChannelOption.SO_BACKLOG, 10);
+            serverBootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) {
             socketChannel.pipeline()
                 .addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
                 .addLast("Codec", new Codec())
-                .addLast("nettyHandler", InboundHandlerBindHelper);
+                .addLast("nettyHandler", inboundHandlerBindHelper);
                 }
             });
 
             ChannelFuture future = serverBootstrap.bind(port).sync();
-            future.channel().closeFuture().sync();
             logger.info("Lobby Server START ip = {}, port = {}", future.channel().localAddress(), port);
+            future.channel().closeFuture().sync();
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -91,6 +99,7 @@ public class SimpleNettyRunner implements ServiceHandler {
         Message message = Message.create();
         message.init();
         message.setCommand(ResponseCommand.OK);
+        message.finalizeBuffer();
 
         logger.info("send message | command : {}, size : {}", message.getCommand(), message.getSize());
         channelHandlerContext.writeAndFlush(message);
@@ -150,10 +159,10 @@ public class SimpleNettyRunner implements ServiceHandler {
     public void exceptionCaught(ChannelHandlerContext channelHandlerContext, Throwable cause) {
         channelHandlerContext.close();
         if (cause instanceof IOException) {
-            logger.error("NETTY IO EXCEPTION | {}", cause.getMessage());
+            logger.error("NETTY IO EXCEPTION", cause);
             return;
         }
-        printStackTrace(cause);
+        logger.error("NETTY EXCEPTION", cause);
     }
 
     private void printStackTrace(Throwable throwable) {
@@ -170,7 +179,7 @@ public class SimpleNettyRunner implements ServiceHandler {
 
         Message response = Message.create();
         response.init();
-        response.setCommand(0);
+        response.setCommand(ResponseCommand.ERROR);
         response.addString("Unsupported command: " + message.getCommand());
 
         channel.writeAndFlush(response);

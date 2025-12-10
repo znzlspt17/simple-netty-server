@@ -5,4 +5,4 @@ plugins {
 rootProject.name = 'simple-netty-server'
 include 'netcore'
 include 'server'
-include 'Dao'
+include 'dao'

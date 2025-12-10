@@ -27,19 +27,15 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // https://mvnrepository.com/artifact/io.netty/netty-buffer
-    implementation 'io.netty:netty-buffer:4.2.6.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-handler
-    implementation 'io.netty:netty-handler:4.2.6.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-transport
-    implementation 'io.netty:netty-transport:4.2.6.Final'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    implementation 'org.slf4j:slf4j-api:2.0.17'
-    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    implementation 'ch.qos.logback:logback-classic:1.5.19'
+    // Spring Boot (이미 slf4j, logback 포함)
+    implementation 'org.springframework.boot:spring-boot-starter'
+    
+    // Netty - all 사용하여 모든 모듈을 동일한 버전으로
+    implementation 'io.netty:netty-all:4.2.6.Final'
 
     implementation 'io.projectreactor:reactor-core:3.7.12'
     implementation project(':netcore')
+    implementation project(':dao')
 }
 
 tasks.named('test') {

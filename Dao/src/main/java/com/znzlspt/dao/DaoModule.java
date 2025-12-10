@@ -2,6 +2,7 @@ package com.znzlspt.dao;
 
 import com.znzlspt.dao.model.LocalUser;
 import io.r2dbc.spi.ConnectionFactory;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,25 +14,13 @@ import static com.znzlspt.dao.mapper.R2dbcMapper.executeAndSingle;
 /**
  * DAO 모듈의 진입점을 담당할 클래스입니다.
  */
-public final class DaoModule {
+@Service
+public class DaoModule {
 
-    private static volatile DaoModule instance;
-    private ConnectionFactory conn;
+    private final ConnectionFactory conn;
 
-
-    private DaoModule() {
-        conn = DaoConnectionPool.connectionFactory();
-    }
-
-    public static DaoModule getInstance() {
-        if (instance == null) {
-            synchronized (DaoModule.class) {
-                if (instance == null) {
-                    instance = new DaoModule();
-                }
-            }
-        }
-        return instance;
+    public DaoModule(ConnectionFactory connectionFactory) {
+        this.conn = connectionFactory;
     }
 
     public ConnectionFactory getConnectionFactory() {
@@ -70,7 +59,7 @@ public final class DaoModule {
         String sql = ""
                 + "DECLARE @ret int, @result int; "
                 + "EXEC @ret = dbo.proc_logout_user "
-                + "@uuid = @p1 @out_result = @result OUTPUT;"
+                + "@uuid = @p1, @out_result = @result OUTPUT;"
                 + "SELECT @result;";
 
         return Mono.usingWhen(
